@@ -1,0 +1,54 @@
+# ---------------------------------------------------------------------------
+# Cotizador Comercial Flexxus - cotizador.flexxus.com.ar
+#
+# Codigo e imagen: proyecto flxCotizadorComercial (Dockerfile en la raiz).
+# Este repo es solo el stack: lo que Portainer despliega.
+#
+#   /            vista del cliente (publica)
+#   /cotizador/  cotizador interno, con usuario y clave
+# Sin estado, sin volumenes.
+#
+# Variables que hay que cargar en el stack: SERVICE_NAME, NODE, LOKI_URL,
+# DOMAIN_NAME (cotizador.flexxus.com.ar), COTIZADOR_USER, COTIZADOR_PASSWORD.
+# ---------------------------------------------------------------------------
+version: '3.6'
+
+services:
+  cotizador:
+    image: fabreguesm/cotizador-comercial:0.1.0
+    hostname: cotizador-flexxus-com-ar
+    networks:
+      - traefik
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+      - COTIZADOR_USER=${COTIZADOR_USER}
+      - COTIZADOR_PASSWORD=${COTIZADOR_PASSWORD}
+    deploy:
+      placement:
+        constraints: ["${NODE}"]
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.${SERVICE_NAME}-http.entrypoints=web"
+        - "traefik.http.routers.${SERVICE_NAME}-http.rule=Host(`${DOMAIN_NAME}`)"
+        - "traefik.http.middlewares.${SERVICE_NAME}-http.redirectscheme.scheme=https"
+        - "traefik.http.routers.${SERVICE_NAME}-https.rule=Host(`${DOMAIN_NAME}`)"
+        - "traefik.http.routers.${SERVICE_NAME}-https.entrypoints=https"
+        - "traefik.http.routers.${SERVICE_NAME}-https.tls=true"
+        - "traefik.http.routers.${SERVICE_NAME}-https.tls.certresolver=myresolver"
+        - "traefik.http.services.${SERVICE_NAME}-http.loadbalancer.server.port=80"
+      restart_policy:
+        condition: any
+        delay: 10s
+    logging:
+      driver: loki
+      options:
+        loki-url: ${LOKI_URL}
+
+# Sin volumenes a proposito: el contenido sale entero de la imagen, y la clave
+# de /cotizador/ se arma al arrancar desde las variables. Los presupuestos que
+# genera cada asesor quedan en su navegador y en la planilla del Apps Script.
+
+networks:
+  traefik:
+    external: true
+    name: traefik-network
