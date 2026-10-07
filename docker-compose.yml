@@ -11,12 +11,16 @@
 # Variables que hay que cargar en el stack: SERVICE_NAME, NODE, LOKI_URL,
 # DOMAIN_NAME (cotizador.flexxus.com.ar), COTIZADOR_USER, COTIZADOR_PASSWORD.
 # Opcional: HTTP_PORT (puerto interno directo, por defecto 7006).
+#
+# TAG: version de la imagen que corre en este entorno. La pone el pipeline de
+# Bitbucket en cada deploy (flx-cotizador-comercial, rama develop -> staging).
+# Rollback: cambiar TAG en el stack de Portainer y Update con re-pull.
 # ---------------------------------------------------------------------------
 version: '3.6'
 
 services:
   cotizador:
-    image: fabreguesm/cotizador-comercial:0.1.1
+    image: fabreguesm/cotizador-comercial:${TAG:-0.1.1}
     hostname: cotizador-flexxus-com-ar
     # Puerto directo en la red interna (http, sin TLS), para probar sin
     # depender del dominio: http://<ip de cualquier nodo>:7006/
