@@ -11,6 +11,8 @@
 # Variables que hay que cargar en el stack: SERVICE_NAME, NODE, LOKI_URL,
 # DOMAIN_NAME (cotizador.flexxus.com.ar), COTIZADOR_USER, COTIZADOR_PASSWORD.
 # Opcional: HTTP_PORT (puerto interno directo, por defecto 7006).
+# Opcional: COTIZADOR_AUTH=off saca la clave de nginx de /cotizador/ (los
+# precios quedan visibles para quien tenga la URL). Por defecto: on.
 #
 # TAG: version de la imagen que corre en este entorno. La pone el pipeline de
 # Bitbucket en cada deploy (flx-cotizador-comercial, rama develop -> staging).
@@ -32,6 +34,7 @@ services:
       - traefik
     environment:
       - TZ=America/Argentina/Buenos_Aires
+      - COTIZADOR_AUTH=${COTIZADOR_AUTH:-on}
       - COTIZADOR_USER=${COTIZADOR_USER}
       - COTIZADOR_PASSWORD=${COTIZADOR_PASSWORD}
     deploy:
